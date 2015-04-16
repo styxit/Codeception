@@ -1,96 +1,68 @@
-# WebDriver Module
+# Laravel5 Module
 
-**For additional reference, please review the [source](https://github.com/Codeception/Codeception/tree/2.0/src/Codeception/Module/WebDriver.php)**
-
-
-New generation Selenium WebDriver module.
-
-## Selenium Installation
-
-1. Download [Selenium Server](http://docs.seleniumhq.org/download/)
-2. Launch the daemon: `java -jar selenium-server-standalone-2.xx.xxx.jar`
+**For additional reference, please review the [source](https://github.com/Codeception/Codeception/tree/2.0/src/Codeception/Module/Laravel5.php)**
 
 
-## PhantomJS Installation
 
-PhantomJS is a headless alternative to Selenium Server that implements [the WebDriver protocol](https://code.google.com/p/selenium/wiki/JsonWireProtocol).
-It allows you to run Selenium tests on a server without a GUI installed.
+This module allows you to run functional tests for Laravel 5.
+Please try it and leave your feedback.
+The module is based on the Laravel 4 module by Davert.
 
-1. Download [PhantomJS](http://phantomjs.org/download.html)
-2. Run PhantomJS in WebDriver mode: `phantomjs --webdriver=4444`
-
+## Demo project
+<https://github.com/janhenkgerritsen/codeception-laravel5-sample>
 
 ## Status
 
-* Maintainer: **davert**
-* Stability: **stable**
-* Contact: davert.codecept@mailican.com
-* Based on [facebook php-webdriver](https://github.com/facebook/php-webdriver)
+* Maintainer: **Jan-Henk Gerritsen**
+* Stability: **dev**
+* Contact: janhenkgerritsen@gmail.com
+
+## Config
+
+* cleanup: `boolean`, default `true` - all db queries will be run in transaction, which will be rolled back at the end of test.
+* environment_file: `string`, default `.env` - The .env file to load for the tests.
+* bootstrap: `string`, default `bootstrap/app.php` - Relative path to app.php config file.
+* root: `string`, default `` - Root path of our application.
+* packages: `string`, default `workbench` - Root path of application packages (if any).
+
+## API
+
+* app - `Illuminate\Foundation\Application` instance
+* client - `BrowserKit` client
 
 
-## Configuration
 
-* url *required* - Starting URL for your app.
-* browser *required* - Browser to launch.
-* host - Selenium server host (127.0.0.1 by default).
-* port - Selenium server port (4444 by default).
-* restart - Set to false (default) to share browser session between tests, or set to true to create a separate session for each test.
-* window_size - Initial window size. Set to `maximize` or a dimension in the format `640x480`.
-* clear_cookies - Set to false to keep cookies, or set to true (default) to delete all cookies between tests.
-* wait - Implicit wait (default 0 seconds).
-* capabilities - Sets Selenium2 [desired capabilities](http://code.google.com/p/selenium/wiki/DesiredCapabilities). Should be a key-value array.
-
-### Example (`acceptance.suite.yml`)
-
-    modules:
-       enabled: [WebDriver]
-       config:
-          WebDriver:
-             url: 'http://localhost/'
-             browser: firefox
-             window_size: 1024x768
-             wait: 10
-             capabilities:
-                 unexpectedAlertBehaviour: 'accept'
-                 firefox_profile: '/Users/paul/Library/Application Support/Firefox/Profiles/codeception-profile.zip.b64' 
-
-
-## Locating Elements
-
-Most methods in this module that operate on a DOM element (e.g. `click`) accept a locator as the first argument, which can be either a string or an array.
-
-If the locator is an array, it should have a single element, with the key signifying the locator type (`id`, `name`, `css`, `xpath`, `link`, or `class`) and the value being the locator itself. This is called a "strict" locator. Examples:
-
-* `['id' => 'foo']` matches `<div id="foo">`
-* `['name' => 'foo']` matches `<div name="foo">`
-* `['css' => 'input[type=input][value=foo]']` matches `<input type="input" value="foo">`
-* `['xpath' => "//input[@type='submit'][contains(@value, 'foo')]"]` matches `<input type="submit" value="foobar">`
-* `['link' => 'Click here']` matches `<a href="google.com">Click here</a>`
-* `['class' => 'foo']` matches `<div class="foo">`
-
-Writing good locators can be tricky. The Mozilla team has written an excellent guide titled [Writing reliable locators for Selenium and WebDriver tests](https://blog.mozilla.org/webqa/2013/09/26/writing-reliable-locators-for-selenium-and-webdriver-tests/).
-
-If you prefer, you may also pass a string for the locator. This is called a "fuzzy" locator. In this case, Codeception uses a a variety of heuristics (depending on the exact method called) to determine what element you're referring to. For example, here's the heuristic used for the `submitForm` method:
-
-1. Does the locator look like an ID selector (e.g. "#foo")? If so, try to find a form matching that ID.
-2. If nothing found, check if locator looks like a CSS selector. If so, run it.
-3. If nothing found, check if locator looks like an XPath expression. If so, run it.
-4. Throw an `ElementNotFound` exception.
-
-Be warned that fuzzy locators can be significantly slower than strict locators. If speed is a concern, it's recommended you stick with explicitly specifying the locator type via the array syntax.
-
-## Migration Guide (Selenium2 -> WebDriver)
-
-* `wait` method accepts seconds instead of milliseconds. All waits use second as parameter.
-
-
-# Methods
-
-
-### acceptPopup
+### amHttpAuthenticated
  
-Accepts the active JavaScript native popup window, as created by `window.alert`|`window.confirm`|`window.prompt`.
-Don't confuse popups with modal windows, as created by [various libraries](http://jster.net/category/windows-modals-popups).
+Authenticates user for HTTP_AUTH
+
+ * `param` $username
+ * `param` $password
+
+
+### amLoggedAs
+ 
+Set the currently logged in user for the application.
+Takes either an object that implements the User interface or
+an array of credentials.
+
+ * `param`  \Illuminate\Contracts\Auth\User|array $user
+ * `param`  string $driver
+@return void
+
+
+### amOnAction
+ 
+Opens web page by action name
+
+```php
+<?php
+$I->amOnAction('PostsController@index');
+?>
+```
+
+ * `param` $action
+ * `param array` $params
 
 
 ### amOnPage
@@ -109,54 +81,18 @@ $I->amOnPage('/register');
  * `param` $page
 
 
-### amOnSubdomain
+### amOnRoute
  
-Changes the subdomain for the 'url' configuration parameter.
-Does not open a page; use `amOnPage` for that.
+Opens web page using route name and parameters.
 
-``` php
+```php
 <?php
-// If config is: 'http://mysite.com'
-// or config is: 'http://www.mysite.com'
-// or config is: 'http://company.mysite.com'
-
-$I->amOnSubdomain('user');
-$I->amOnPage('/');
-// moves to http://user.mysite.com/
+$I->amOnRoute('posts.create');
 ?>
 ```
 
- * `param` $subdomain
-
-
-
-### amOnUrl
- 
-Open web page at the given absolute URL and sets its hostname as the base host.
-
-``` php
-<?php
-$I->amOnUrl('http://codeception.com');
-$I->amOnPage('/quickstart'); // moves to http://codeception.com/quickstart
-?>
-```
-
-
-### appendField
- 
-Append the given text to the given element.
-Can also add a selection to a select box.
-
-``` php
-<?php
-$I->appendField('#mySelectbox', 'SelectValue');
-$I->appendField('#myTextField', 'appended');
-?>
-```
-
- * `param string` $field
- * `param string` $value
- \Codeception\Exception\ElementNotFound
+ * `param` $route
+ * `param array` $params
 
 
 ### attachFile
@@ -172,11 +108,6 @@ $I->attachFile('input[@type="file"]', 'prices.xls');
 
  * `param` $field
  * `param` $filename
-
-
-### cancelPopup
- 
-Dismisses the active JavaScript popup, as created by `window.alert`|`window.confirm`|`window.prompt`.
 
 
 ### checkOption
@@ -225,14 +156,6 @@ $I->click(['link' => 'Login']);
  * `param` $context
 
 
-### clickWithRightButton
- 
-Performs contextual click with the right mouse button on an element.
-
- * `param` $cssOrXPath
- \Codeception\Exception\ElementNotFound
-
-
 ### dontSee
  
 Checks that the current page doesn't contain the text specified.
@@ -248,6 +171,11 @@ $I->dontSee('Sign Up','//body/h1'); // with XPath
 
  * `param`      $text
  * `param null` $selector
+
+
+### dontSeeAuthentication
+ 
+Check that user is not authenticated
 
 
 ### dontSeeCheckboxIsChecked
@@ -319,13 +247,6 @@ $I->dontSeeElement('input', ['value' => '123456']);
 
  * `param` $selector
  * `param array` $attributes
-
-
-### dontSeeElementInDOM
- 
-Opposite of `seeElementInDOM`.
-
- * `param` $selector
 
 
 ### dontSeeInCurrentUrl
@@ -404,13 +325,6 @@ $I->dontSeeInFormFields('#form-id', [
  * `param` $params
 
 
-### dontSeeInPageSource
- 
-Checks that the page source doesn't contain the given string.
-
- * `param` $text
-
-
 ### dontSeeInTitle
  
 Checks that the page title does not contain the given string.
@@ -450,59 +364,18 @@ $I->dontSeeOptionIsSelected('#form input[name=payment]', 'Visa');
 
 
 
-### doubleClick
+### dontSeeRecord
  
-Performs a double-click on an element matched by CSS or XPath.
-
- * `param` $cssOrXPath
- \Codeception\Exception\ElementNotFound
-
-
-### dragAndDrop
- 
-Performs a simple mouse drag-and-drop operation.
+Checks that record does not exist in database.
 
 ``` php
 <?php
-$I->dragAndDrop('#drag', '#drop');
+$I->dontSeeRecord('users', array('name' => 'davert'));
 ?>
 ```
 
- * `param string` $source (CSS ID or XPath)
- * `param string` $target (CSS ID or XPath)
-
-
-### executeInSelenium
- 
-Low-level API method.
-If Codeception commands are not enough, this allows you to use Selenium WebDriver methods directly:
-
-``` php
-$I->executeInSelenium(function(\WebDriver $webdriver) {
-  $webdriver->get('http://google.com');
-});
-```
-
-This runs in the context of the [RemoteWebDriver class](https://github.com/facebook/php-webdriver/blob/master/lib/remote/RemoteWebDriver.php).
-Try not to use this command on a regular basis.
-If Codeception lacks a feature you need, please implement it and submit a patch.
-
- * `param callable` $function
-
-
-### executeJS
- 
-Executes custom JavaScript.
-
-This example uses jQuery to get a value and assigns that value to a PHP variable:
-
-```php
-<?php
-$myVar = $I->executeJS('return $("#myField").val()');
-?>
-```
-
- * `param` $script
+ * `param` $model
+ * `param array` $attributes
 
 
 ### fillField
@@ -520,11 +393,11 @@ $I->fillField(['name' => 'email'], 'jon@mail.com');
  * `param` $value
 
 
-### getVisibleText
+### getApplication
  
-Grabs all visible text from the current page.
+Provides access the Laravel application object.
 
-@return string
+@return \Illuminate\Foundation\Application
 
 
 ### grabAttributeFrom
@@ -571,6 +444,44 @@ $uri = $I->grabFromCurrentUrl();
  * `internal param` $url
 
 
+### grabRecord
+ 
+Retrieves record from database
+
+``` php
+<?php
+$category = $I->grabRecord('users', array('name' => 'davert'));
+?>
+```
+
+ * `param` $model
+ * `param array` $attributes
+
+
+### grabService
+ 
+Return an instance of a class from the IoC Container.
+(http://laravel.com/docs/ioc)
+
+Example
+``` php
+<?php
+// In Laravel
+App::bind('foo', function($app)
+{
+    return new FooBar;
+});
+
+// Then in test
+$service = $I->grabService('foo');
+
+// Will return an instance of FooBar, also works for singletons.
+?>
+```
+
+ * `param`  string $class
+
+
 ### grabTextFrom
  
 Finds and returns the text contents of the given element.
@@ -590,105 +501,28 @@ $value = $I->grabTextFrom('~<input value=(.*?)]~sgi'); // match with a regex
 
 ### grabValueFrom
  
-Finds the value for the given form field.
-If a fuzzy locator is used, the field is found by field name, CSS, and XPath.
-
-``` php
-<?php
-$name = $I->grabValueFrom('Name');
-$name = $I->grabValueFrom('input[name=username]');
-$name = $I->grabValueFrom('descendant-or-self::form/descendant::input[@name = 'username']');
-$name = $I->grabValueFrom(['name' => 'username']);
-?>
-```
-
  * `param` $field
 
+@return array|mixed|null|string
 
 
-### makeScreenshot
+### haveRecord
  
-Takes a screenshot of the current window and saves it to `tests/_output/debug`.
+Inserts record into the database.
 
 ``` php
 <?php
-$I->amOnPage('/user/edit');
-$I->makeScreenshot('edit_page');
-// saved to: tests/_output/debug/edit_page.png
+$user_id = $I->haveRecord('users', array('name' => 'Davert'));
 ?>
 ```
 
- * `param` $name
+ * `param` $model
+ * `param array` $attributes
 
 
-### maximizeWindow
+### logout
  
-Maximizes the current window.
-
-
-### moveBack
- 
-Moves back in history.
-
-
-### moveForward
- 
-Moves forward in history.
-
-
-### moveMouseOver
- 
-Move mouse over the first element matched by the given locator.
-If the second and third parameters are given, then the mouse is moved to an offset of the element's top-left corner.
-Otherwise, the mouse is moved to the center of the element.
-
-``` php
-<?php
-$I->moveMouseOver(['css' => '.checkout'], 20, 50);
-?>
-```
-
- * `param string` $cssOrXPath css or xpath of the web element
- * `param int` $offsetX
- * `param int` $offsetY
-
- \Codeception\Exception\ElementNotFound
-
-
-### pauseExecution
- 
-Pauses test execution in debug mode.
-To proceed test press "ENTER" in console.
-
-This method is useful while writing tests, since it allows you to inspect the current page in the middle of a test case.
-
-
-### pressKey
- 
-Presses the given key on the given element. 
-To specify a character and modifier (e.g. ctrl, alt, shift, meta), pass an array for $char with 
-the modifier as the first element and the character as the second.
-For special keys use key constants from \WebDriverKeys class.
-
-``` php
-<?php
-// <input id="page" value="old" />
-$I->pressKey('#page','a'); // => olda
-$I->pressKey('#page',array('ctrl','a'),'new'); //=> new
-$I->pressKey('#page',array('shift','111'),'1','x'); //=> old!!!1x
-$I->pressKey('descendant-or-self::*[@id='page']','u'); //=> oldu
-$I->pressKey('#name', array('ctrl', 'a'), WebDriverKeys::DELETE); //=>''
-?>
-```
-
- * `param` $element
- * `param` $char Can be char or array with modifier. You can provide several chars.
- \Codeception\Exception\ElementNotFound
-
-
-### reloadPage
- 
-Reloads the current page.
+Logs user out
 
 
 ### resetCookie
@@ -699,20 +533,6 @@ You can set additional cookie params like `domain`, `path` in array passed as la
  * `param` $cookie
 
  * `param array` $params
-
-
-### resizeWindow
- 
-Resize the current window.
-
-``` php
-<?php
-$I->resizeWindow(800, 600);
-
-```
-
- * `param int` $width
- * `param int` $height
 
 
 ### see
@@ -730,6 +550,11 @@ $I->see('Sign Up','//body/h1'); // with XPath
 
  * `param`      $text
  * `param null` $selector
+
+
+### seeAuthentication
+ 
+Checks that user is authenticated
 
 
 ### seeCheckboxIsChecked
@@ -759,6 +584,33 @@ $I->seeCookie('PHPSESSID');
 ```
 
  * `param` $cookie
+ * `param array` $params
+
+
+### seeCurrentActionIs
+ 
+Checks that current url matches action
+
+```php
+<?php
+$I->seeCurrentActionIs('PostsController@index');
+?>
+```
+
+ * `param` $action
+ * `param array` $params
+
+
+### seeCurrentRouteIs
+ 
+Checks that current url matches route
+
+```php
+<?php
+$I->seeCurrentRouteIs('posts.index');
+?>
+```
+ * `param` $route
  * `param array` $params
 
 
@@ -813,17 +665,48 @@ $I->seeElement(['css' => 'form input'], ['name' => 'login']);
 @return
 
 
-### seeElementInDOM
+### seeFormErrorMessage
  
-Checks that the given element exists on the page, even it is invisible.
+Assert that specific form error message is set in the view.
+
+Useful for validation messages and generally messages array
+ e.g.
+ return `Redirect::to('register')->withErrors($validator);`
+
+Example of Usage
 
 ``` php
 <?php
-$I->seeElementInDOM('//form/input[type=hidden]');
+$I->seeFormErrorMessage('username', 'Invalid Username');
 ?>
 ```
+ * `param string` $key
+ * `param string` $errorMessage
 
- * `param` $selector
+
+### seeFormErrorMessages
+ 
+Assert that specific form error messages are set in the view.
+
+Useful for validation messages and generally messages array
+ e.g.
+ return `Redirect::to('register')->withErrors($validator);`
+
+Example of Usage
+
+``` php
+<?php
+$I->seeFormErrorMessages(array('username'=>'Invalid Username'));
+?>
+```
+ * `param array` $bindings
+
+
+### seeFormHasErrors
+ 
+Assert that the form errors are bound to the View.
+
+@return bool
 
 
 ### seeInCurrentUrl
@@ -925,23 +808,13 @@ $I->seeInFormFields('//form[@id=my-form]', $form);
  * `param` $params
 
 
-### seeInPageSource
+### seeInSession
  
-Checks that the page source contains the given string.
+Assert that the session has a given list of values.
 
-```php
-<?php
-$I->seeInPageSource('<link rel="apple-touch-icon"');
-```
-
- * `param` $text
-
-
-### seeInPopup
- 
-Checks that the active JavaScript popup, as created by `window.alert`|`window.confirm`|`window.prompt`, contains the given string.
-
- * `param` $text
+ * `param`  string|array $key
+ * `param`  mixed $value
+@return void
 
 
 ### seeInTitle
@@ -1005,6 +878,39 @@ $I->seeOptionIsSelected('#form input[name=payment]', 'Visa');
 
 
 
+### seePageNotFound
+ 
+Asserts that current page has 404 response status code.
+
+
+### seeRecord
+ 
+Checks that record exists in database.
+
+``` php
+$I->seeRecord('users', array('name' => 'davert'));
+```
+
+ * `param` $model
+ * `param array` $attributes
+
+
+### seeResponseCodeIs
+ 
+Checks that response code is equal to value provided.
+
+ * `param` $code
+
+
+
+### seeSessionHasValues
+ 
+Assert that the session has a given list of values.
+
+ * `param`  array $bindings
+@return void
+
+
 ### selectOption
  
 Selects an option in a select tag or in radio button group.
@@ -1029,6 +935,59 @@ $I->selectOption('Which OS do you use?', array('Windows','Linux'));
  * `param` $option
 
 
+### sendAjaxGetRequest
+ 
+If your page triggers an ajax request, you can perform it manually.
+This action sends a GET ajax request with specified params.
+
+See ->sendAjaxPostRequest for examples.
+
+ * `param` $uri
+ * `param` $params
+
+
+### sendAjaxPostRequest
+ 
+If your page triggers an ajax request, you can perform it manually.
+This action sends a POST ajax request with specified params.
+Additional params can be passed as array.
+
+Example:
+
+Imagine that by clicking checkbox you trigger ajax request which updates user settings.
+We emulate that click by running this ajax request manually.
+
+``` php
+<?php
+$I->sendAjaxPostRequest('/updateSettings', array('notifications' => true)); // POST
+$I->sendAjaxGetRequest('/updateSettings', array('notifications' => true)); // GET
+
+```
+
+ * `param` $uri
+ * `param` $params
+
+
+### sendAjaxRequest
+ 
+If your page triggers an ajax request, you can perform it manually.
+This action sends an ajax request with specified method and params.
+
+Example:
+
+You need to perform an ajax request specifying the HTTP method.
+
+``` php
+<?php
+$I->sendAjaxRequest('PUT', '/posts/7', array('title' => 'new title'));
+
+```
+
+ * `param` $method
+ * `param` $uri
+ * `param` $params
+
+
 ### setCookie
  
 Sets a cookie with the given name and value.
@@ -1051,7 +1010,7 @@ $I->setCookie('PHPSESSID', 'el4ukv0kqbvoirg7nkp4dncpk3');
 ### submitForm
  
 Submits the given form on the page, optionally with the given form values.
-Give the form fields values as an array. Note that hidden fields can't be accessed.
+Give the form fields values as an array.
 
 Skipped fields will be filled by their values from the page.
 You don't need to click the 'Submit' button afterwards.
@@ -1101,74 +1060,54 @@ $I->submitForm('#userForm', array('user' => array('login' => 'Davert', 'password
 
 ```
 
+Pair this with seeInFormFields for quick testing magic.
+
+``` php
+<?php
+$form = [
+     'field1' => 'value',
+     'field2' => 'another value',
+     'checkbox1' => true,
+     // ...
+];
+$I->submitForm('//form[@id=my-form]', $form, 'submitButton');
+// $I->amOnPage('/path/to/form-page') may be needed
+$I->seeInFormFields('//form[@id=my-form]', $form);
+?>
+```
+
+Parameter values can be set to arrays for multiple input fields
+of the same name, or multi-select combo boxes.  For checkboxes,
+either the string value can be used, or boolean values which will
+be replaced by the checkbox's value in the DOM.
+
+``` php
+<?php
+$I->submitForm('#my-form', [
+     'field1' => 'value',
+     'checkbox' => [
+         'value of first checkbox',
+         'value of second checkbox,
+     ],
+     'otherCheckboxes' => [
+         true,
+         false,
+         false
+     ],
+     'multiselect' => [
+         'first option value',
+         'second option value'
+     ]
+]);
+?>
+```
+
+Mixing string and boolean values for a checkbox's value is not
+supported and may produce unexpected results.
+
  * `param` $selector
  * `param` $params
  * `param` $button
-
-
-### switchToIFrame
- 
-Switch to another frame on the page.
-
-Example:
-``` html
-<iframe name="another_frame" src="http://example.com">
-
-```
-
-``` php
-<?php
-# switch to iframe
-$I->switchToIFrame("another_frame");
-# switch to parent page
-$I->switchToIFrame();
-
-```
-
- * `param string|null` $name
-
-
-### switchToWindow
- 
-Switch to another window identified by name.
-
-The window can only be identified by name. If the $name parameter is blank, the parent window will be used.
-
-Example:
-``` html
-<input type="button" value="Open window" onclick="window.open('http://example.com', 'another_window')">
-```
-
-``` php
-<?php
-$I->click("Open window");
-# switch to another window
-$I->switchToWindow("another_window");
-# switch to parent window
-$I->switchToWindow();
-?>
-```
-
-If the window has no name, the only way to access it is via the `executeInSelenium()` method, like so:
-
-``` php
-<?php
-$I->executeInSelenium(function (\Webdriver $webdriver) {
-     $handles=$webdriver->getWindowHandles();
-     $last_window = end($handles);
-     $webdriver->switchTo()->window($last_window);
-});
-?>
-```
-
- * `param string|null` $name
-
-
-### typeInPopup
- 
-Enters text into a native JavaScript prompt popup, as created by `window.prompt`.
-
- * `param` $keys
 
 
 ### uncheckOption
@@ -1183,120 +1122,4 @@ $I->uncheckOption('#notify');
 
  * `param` $option
 
-
-### unselectOption
-__not documented__
-
-
-### wait
- 
-Wait for $timeout seconds.
-
- * `param int` $timeout secs
- \Codeception\Exception\TestRuntime
-
-
-### waitForElement
- 
-Waits up to $timeout seconds for an element to appear on the page.
-If the element doesn't appear, a timeout exception is thrown.
-
-``` php
-<?php
-$I->waitForElement('#agree_button', 30); // secs
-$I->click('#agree_button');
-?>
-```
-
- * `param` $element
- * `param int` $timeout seconds
- \Exception
-
-
-### waitForElementChange
- 
-Waits up to $timeout seconds for the given element to change.
-Element "change" is determined by a callback function which is called repeatedly until the return value evaluates to true.
-
-``` php
-<?php
-$I->waitForElementChange('#menu', function(\WebDriverElement $el) {
-    return $el->isDisplayed();
-}, 100);
-?>
-```
-
- * `param` $element
- * `param \Closure` $callback
- * `param int` $timeout seconds
- \Codeception\Exception\ElementNotFound
-
-
-### waitForElementNotVisible
- 
-Waits up to $timeout seconds for the given element to become invisible.
-If element stays visible, a timeout exception is thrown.
-
-``` php
-<?php
-$I->waitForElementNotVisible('#agree_button', 30); // secs
-?>
-```
-
- * `param` $element
- * `param int` $timeout seconds
- \Exception
-
-
-### waitForElementVisible
- 
-Waits up to $timeout seconds for the given element to be visible on the page.
-If element doesn't appear, a timeout exception is thrown.
-
-``` php
-<?php
-$I->waitForElementVisible('#agree_button', 30); // secs
-$I->click('#agree_button');
-?>
-```
-
- * `param` $element
- * `param int` $timeout seconds
- \Exception
-
-
-### waitForJS
- 
-Executes JavaScript and waits up to $timeout seconds for it to return true.
-
-In this example we will wait up to 60 seconds for all jQuery AJAX requests to finish.
-
-``` php
-<?php
-$I->waitForJS("return $.active == 0;", 60);
-?>
-```
-
- * `param string` $script
- * `param int` $timeout seconds
-
-
-### waitForText
- 
-Waits up to $timeout seconds for the given string to appear on the page.
-Can also be passed a selector to search in.
-If the given text doesn't appear, a timeout exception is thrown.
-
-``` php
-<?php
-$I->waitForText('foo', 30); // secs
-$I->waitForText('foo', 30, '.title'); // secs
-?>
-```
-
- * `param string` $text
- * `param int` $timeout seconds
- * `param null` $selector
- \Exception
-
-<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.0/src/Codeception/Module/WebDriver.php">Help us to improve documentation. Edit module reference</a></div>
+<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.0/src/Codeception/Module/Laravel5.php">Help us to improve documentation. Edit module reference</a></div>

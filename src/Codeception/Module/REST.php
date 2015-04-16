@@ -353,6 +353,8 @@ class REST extends \Codeception\Module
 
     protected function execute($method = 'GET', $url, $parameters = array(), $files = array())
     {
+        $this->debugSection("Request headers", $this->headers);
+
         foreach ($this->headers as $header => $val) {
             $header = str_replace('-','_',strtoupper($header));
             $this->client->setServerParameter("HTTP_$header", $val);
@@ -692,6 +694,17 @@ class REST extends \Codeception\Module
     {
         $this->assertNotEmpty((new JsonArray($this->response))->filterByJsonPath($jsonPath),
             "Received JSON did not match the JsonPath provided\n".$this->response);
+    }
+
+    /**
+     * Opposite to seeResponseJsonMatchesJsonPath
+     *
+     * @param array $jsonPath
+     */
+    public function dontSeeResponseJsonMatchesJsonPath($jsonPath)
+    {
+        $this->assertEmpty((new JsonArray($this->response))->filterByJsonPath($jsonPath),
+            "Received JSON did (but should not) match the JsonPath provided\n".$this->response);
     }
 
     /**
